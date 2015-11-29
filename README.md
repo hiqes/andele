@@ -63,12 +63,13 @@ For example:
         builder.withPermission(Manifest.permission.READ_CALL_LOG)
                .withUsage(PermissionUse.FEATURE)
                .listener(this)
-               .callback(new ProtectedAction.Callback() {
+               .actionCallback(new ProtectedAction.ActionCallback() {
                    @Override
                    public void doAction(ProtectedAction action) {
-                       Log.d(TAG, "Last call: " + CallLog.Calls.getLastOutgoingCall(this);
+                       Log.d(TAG, "Last call: " + CallLog.Calls.getLastOutgoingCall(this));
                    }
-               });
+               })
+               .userPromptCallback(this);
         Andele.checkAndExecute(this, builder.build());
 ```
 

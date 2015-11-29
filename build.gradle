@@ -18,7 +18,7 @@ apply plugin: 'com.jfrog.bintray'
 
 //  Versions are x.y.z and version code is xxyyzz.  Leading 0s are stripped.
 version = "0.1.0"
-def versionNum = 1000
+def versionNum = 100
 
 android {
     compileSdkVersion 23
