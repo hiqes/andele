@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="andele__exit_text">Exit</string>
+    <string name="andele__critical_title">Permission Required</string>
+    <string name="andele__default_denied_feeback">The app feature requires, \'%s\'. Enable it via Settings.
+    </string>
+    <string name="andele__settings_label">Settings</string>
+    <string name="andele__default_denied_reminder">The app requires \'%s\' to work. Enable it via the Settings.
+    </string>
+</resources>
