@@ -56,32 +56,32 @@ then handles the permission check and if the app has the permission it
 calls the action callback in the same context in which it was requested.
 For example:
 
-```
-    @Override
-    public void onClick(View view) {
-        ProtectedAction.Builder builder = new ProtectedAction.Builder();
-        builder.withPermission(Manifest.permission.READ_CALL_LOG)
-               .withUsage(PermissionUse.FEATURE)
-               .listener(this)
-               .actionCallback(new ProtectedAction.ActionCallback() {
-                   @Override
-                   public void doAction(ProtectedAction action) {
-                       Log.d(TAG, "Last call: " + CallLog.Calls.getLastOutgoingCall(this));
-                   }
-               })
-               .userPromptCallback(this);
-        Andele.checkAndExecute(this, builder.build());
+```java
+@Override
+public void onClick(View view) {
+    ProtectedAction.Builder builder = new ProtectedAction.Builder();
+    builder.withPermission(Manifest.permission.READ_CALL_LOG)
+           .withUsage(PermissionUse.FEATURE)
+           .listener(this)
+           .actionCallback(new ProtectedAction.ActionCallback() {
+               @Override
+               public void doAction(ProtectedAction action) {
+                   Log.d(TAG, "Last call: " + CallLog.Calls.getLastOutgoingCall(this));
+               }
+           })
+           .userPromptCallback(this);
+    Andele.checkAndExecute(this, builder.build());
 ```
 
 Since Andele does not require the app to subclass a special Activity or
 Fragment, the app must also call through to Andele from its
 `onRequestPermissionsResult()` method.
 
-```
-     @Override
-     public static void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
-         Andele.onRequestPermissionsResult(reqCode, permissions, grantResults));
-     }
+```java
+@Override
+public static void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
+    Andele.onRequestPermissionsResult(reqCode, permissions, grantResults));
+}
 ```
 
 
