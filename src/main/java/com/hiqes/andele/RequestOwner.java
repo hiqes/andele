@@ -15,21 +15,36 @@
  */
 package com.hiqes.andele;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
+import android.os.Handler;
 import android.view.View;
 
 public abstract class RequestOwner {
-    static final int            DEFAULT_MASK = 0xFFFFFFFF;
+    static final int            DEFAULT_MASK = 0x7FFFFFFF;
 
     public abstract int checkSelfPermission(String permission);
     public abstract void requestPermissions(String[] permissions, int code);
     public abstract boolean shouldShowRequestPermissionRationale(String permission);
+    public abstract boolean isSameOwner(RequestOwner otherOwner);
+    public abstract boolean isParentActivity(Object obj);
+
     public abstract Context getUiContext();
     public abstract View getRootView();
     abstract PackageManager getPackageManager();
+    abstract Application getApplication();
 
+    /**
+     * Return the mask of possible values which can be used for request
+     * codes.  Note that this value must have the most significant bit cleared
+     * as the {@link RequestManager#queueRequest(RequestOwner, ProtectedAction[], Handler)}
+     * method will return a negative value to indicate if the request has
+     * already been queued.
+     * <p>
+     * @return The bitmask of possible values which can be used for request codes.
+     */
     public int getReqeuestCodeMask() {
         return DEFAULT_MASK;
     }

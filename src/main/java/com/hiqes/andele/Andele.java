@@ -16,6 +16,7 @@
 package com.hiqes.andele;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -42,65 +43,24 @@ public class Andele {
 
     static final int                           MSG_DO_ACTION = 1;
     static final int                           MSG_SHOW_EDUCATE = 10;
-    static final int                           MSG_SHOW_EDUCATE_NEXT = 11;
-    static final int                           MSG_EDUCATE_DONE = 12;
     static final int                           MSG_SHOW_EDUCATE_REMINDER = 13;
     static final int                           MSG_SHOW_DENIED_CRITICAL = 14;
     static final int                           MSG_SHOW_DENIED_FEEDBACK = 15;
     static final int                           MSG_DENIED = 16;
     static final int                           MSG_GO_TO_SETTINGS = 50;
 
-    private static HashMap<Integer, Request>   sActiveReqs = new HashMap<>();
-    private static Random                      sRand = new Random(System.nanoTime());
+    private static RequestManager              sReqMgr = new RequestManager();
     private static PermResultHandler           sHandler = new PermResultHandler(Looper.getMainLooper());
-    private static ProtectedAction             sCurEducate;
-    private static List<ProtectedAction>       sEducateQueue = new ArrayList<>();
 
-    //  TODO: REVISE THIS TO CONFINE CODES WITHIN A "RANGE" SO WE DON'T CONFLICT WITH APP
-    private static int getNextCode(int mask) {
-        int                     ret;
-
-        synchronized(Andele.class) {
-            //  Only get a random number 1x.  Just add to it through the
-            //  loop so we don't unnecessarily tax the system.
-            ret = sRand.nextInt() & mask;
-            while (true) {
-                if (!sActiveReqs.containsKey(ret)) {
-                    break;
-                }
-
-                ret = (ret + 1) & mask;
-            }
-        }
-
-        return ret;
-    }
-
-    private static int queueRequests(RequestOwner owner, ProtectedAction[] actions) {
-        Handler                 handler = Util.isMainThread() ? sHandler : new PermResultHandler();
-        Request                 req = new Request(owner, actions, handler);
-
-        int reqCode = getNextCode(owner.getReqeuestCodeMask());
-
-        synchronized(Andele.class) {
-            sActiveReqs.put(reqCode, req);
-        }
-
-        return reqCode;
-    }
-
-    private static int queueRequest(RequestOwner owner, ProtectedAction action) {
-        ProtectedAction[]       actions = new ProtectedAction[1];
-        actions[0] = action;
-        return queueRequests(owner, actions);
+    private static Handler getReqHandler() {
+        Handler handler = Util.isMainThread() ? sHandler : new PermResultHandler();
+        return handler;
     }
 
     private static void doRequest(int reqCode) {
         Request                 req;
 
-        synchronized (Andele.class) {
-            req = sActiveReqs.get(reqCode);
-        }
+        req = sReqMgr.getRequest(reqCode);
 
         if (req != null) {
             ProtectedAction[]   actions = req.getActions();
@@ -159,14 +119,17 @@ public class Andele {
 
             //  First things first, queue the request with the needy actions
             //  which contains just the subset of stuff that needs edu/req.
-            int reqCode = queueRequests(owner, needyActions);
-
-            //  If firstEduIndex is not -1, somebody needs an explanation.
-            if (firstEduIndex != -1) {
-                Log.d(TAG, "Show edu for req " + reqCode);
-                showEducateUi(reqCode, firstEduIndex);
+            int reqCode = sReqMgr.queueRequest(owner, needyActions, getReqHandler());
+            if (reqCode >= 0) {
+                //  If firstEduIndex is not -1, somebody needs an explanation.
+                if (firstEduIndex != -1) {
+                    Log.d(TAG, "Show edu for req " + reqCode);
+                    showEducateUi(reqCode, firstEduIndex);
+                } else {
+                    doRequest(reqCode);
+                }
             } else {
-                doRequest(reqCode);
+                Log.d(TAG, "checkAndExecute: req already queued and being processed");
             }
         }
     }
@@ -390,20 +353,28 @@ public class Andele {
         checkAndRequestMandatoryPermissions(new RequestOwnerSupportFragment(fragment), actions);
     }
 
-    //  TODO: NEED TO DETECT DESTROY OF ACTIVITIES, REMOVE REQUEST(S) TO AVOID MEM LEAKS
-
-    public static void markEducateModalDone(Context context, int reqCode, ProtectedAction action) {
+    /**
+     * This method should be called once the educate UI modal has been displayed
+     * to the user for the specific ProtectedAction and request code passed
+     * to the app's showEducateModal() method.  Using this mechanism, the app
+     * can inform Andele that educate has been done for an action protected
+     * by an ESSENTIAL usage permission so it will not be requested again.
+     * <p>
+     * @param reqCode   The request code previously provided to the app's
+     *                  showEducateModal() method
+     * @param action    The ProtectedAction previously provided to the app's
+     *                  showEducateModal() method
+     */
+    public static void markEducateModalDone(int reqCode, ProtectedAction action) {
         Request                 req;
         int                     actionIndex = -1;
         ProtectedAction[]       actions;
 
         //  Sanity check
-        synchronized (Andele.class) {
-            req = sActiveReqs.get(reqCode);
-            if (req == null) {
-                Log.w(TAG, "markEducateModalDone called for unknown req: " + reqCode);
-                return;
-            }
+        req = sReqMgr.getRequest(reqCode);
+        if (req == null) {
+            Log.w(TAG, "markEducateModalDone: unknown req " + reqCode);
+            return;
         }
 
         if (action == null) {
@@ -431,7 +402,7 @@ public class Andele {
 
         //  Mark the action's permission has been done then re-call showEducateUi
         //  so we'll move on to the next (if any.)
-        Util.setEduDone(context, action.mPermDetails);
+        Util.setEduDone(req.getOwner().getUiContext(), action.mPermDetails);
         showEducateUi(reqCode, actionIndex);
     }
 
@@ -471,12 +442,10 @@ public class Andele {
         Request req;
 
         //  Lookup the code, remove the node if there, complain if it doesn't exist
-        synchronized (Andele.class) {
-            req = sActiveReqs.remove(reqCode);
-        }
+        req = sReqMgr.removeRequest(reqCode);
 
         if (req == null) {
-            Log.w(TAG, "Active request not found for code " + reqCode);
+            Log.w(TAG, "onRequestPermissionsResult: request not found for code " + reqCode);
         } else {
             ProtectedAction[] reqActions = req.getActions();
             int actionCount = req.getActionCount();
@@ -659,10 +628,7 @@ public class Andele {
                 case MSG_SHOW_EDUCATE:
                     boolean skipAsk = false;
 
-                    synchronized (Andele.class) {
-                        req = sActiveReqs.get(msg.arg1);
-                    }
-
+                    req = sReqMgr.getRequest(msg.arg1);
                     if (req == null) {
                         //  The request in the message is no longer in
                         //  the active queue.  Complain about it.
@@ -771,8 +737,6 @@ public class Andele {
                     //  so the user will be taken directly to it.
                     context = (Context)msg.obj;
                     Util.startSettingsApp(context);
-
-                    //  TODO: NEED TO PURGE ALL EXISTING REQUESTS AND MESSAGES AS WE ARE LEAVING THE APP FOR SETTINGS?
                     break;
 
                 default:

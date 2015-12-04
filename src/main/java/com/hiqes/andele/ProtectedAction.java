@@ -39,6 +39,35 @@ public class ProtectedAction {
     final UserPromptCallback       mPromptCb;
     final ActionCallback           mActionCb;
 
+    @Override
+    public int hashCode() {
+        int                     ret = 719;
+
+        //  make a simple hash of the permissions string and usage
+        ret = 12 * ret + mPermDetails.mPermission.hashCode();
+        ret = 12 * ret + mPermDetails.mUsage.ordinal();
+        return ret;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        boolean                 ret = false;
+
+        if (this == obj) {
+            ret = true;
+        } else if (obj instanceof ProtectedAction) {
+            ProtectedAction     otherAction = (ProtectedAction)obj;
+
+            //  In order for these to be equal, the perm details must match.
+            if (mPermDetails.mPermission.equals(otherAction.mPermDetails.mPermission) &&
+                (mPermDetails.mUsage == otherAction.mPermDetails.mUsage)) {
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
     /**
      * Listener interface used to inform the app when a permission has been
      * granted or rejected so it can enable or disable functionality.  The app

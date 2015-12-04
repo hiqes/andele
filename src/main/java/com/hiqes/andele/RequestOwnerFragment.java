@@ -16,19 +16,36 @@
 package com.hiqes.andele;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.Application;
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 
-class RequestOwnerFragment extends RequestOwner {
-    static final int            REQ_CODE_MASK = 0xFF;
+import java.lang.ref.WeakReference;
 
-    private Fragment            mFragment;
+class RequestOwnerFragment extends RequestOwner {
+    private static final String         TAG = RequestOwnerFragment.class.getSimpleName();
+    static final int                    REQ_CODE_MASK = 0x7F;
+
+    private WeakReference<Fragment> mFragmentRef;
+    private ComponentName           mActivityCompName;
+    private int                     mId;
+    private String                  mTag;
+
+    private Fragment getFragment() {
+        return mFragmentRef.get();
+    }
 
     public RequestOwnerFragment(Fragment fragment) {
-        mFragment = fragment;
+        mFragmentRef = new WeakReference<>(fragment);
+        mActivityCompName = fragment.getActivity().getComponentName();
+        mId = fragment.getId();
+        mTag = fragment.getTag();
     }
 
     //@TargetApi(Build.VERSION_CODES.M)
@@ -38,7 +55,16 @@ class RequestOwnerFragment extends RequestOwner {
         int                     ret = PackageManager.PERMISSION_GRANTED;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ret = mFragment.getActivity().checkSelfPermission(permission);
+            Fragment frag = getFragment();
+
+            if (frag == null) {
+                //  The Fragment has been garbage collected, should NOT
+                //  happen but fail gracefully with a log
+                Log.e(TAG, "checkSelfPermission: Fragment no long valid, assume DENIED");
+                ret = PackageManager.PERMISSION_DENIED;
+            } else {
+                ret = frag.getActivity().checkSelfPermission(permission);
+            }
         }
 
         return ret;
@@ -48,7 +74,13 @@ class RequestOwnerFragment extends RequestOwner {
     @TargetApi(23)
     @Override
     public void requestPermissions(String[] permissions, int code) {
-        mFragment.requestPermissions(permissions, code);
+        Fragment                frag = getFragment();
+
+        if (frag == null) {
+            throw new IllegalStateException("Fragment no longer valid");
+        }
+
+        frag.requestPermissions(permissions, code);
     }
 
     //@TargetApi(Build.VERSION_CODES.M)
@@ -56,17 +88,79 @@ class RequestOwnerFragment extends RequestOwner {
     @Override
     public boolean shouldShowRequestPermissionRationale(String permission) {
         boolean                 ret = false;
+        Fragment                frag = getFragment();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ret = mFragment.shouldShowRequestPermissionRationale(permission);
+            if (frag == null) {
+                Log.e(TAG, "shouldShowRequestPermissionRationale: Fragment no longer valid, assume FALSE");
+            } else {
+                ret = frag.shouldShowRequestPermissionRationale(permission);
+            }
         }
 
         return ret;
     }
 
     @Override
+    public boolean isSameOwner(RequestOwner otherOwner) {
+        boolean                 ret = false;
+        RequestOwnerFragment    otherOwnerFrag = null;
+
+        try {
+            otherOwnerFrag = (RequestOwnerFragment)otherOwner;
+
+            //  Verify the parent activity is the same component
+            if (mActivityCompName.equals(otherOwnerFrag.mActivityCompName)) {
+                //  Tag may or may not be set.  If it is, make sure they
+                //  match.  Otherwise, check the IDs.
+                if ((mTag != null) &&
+                    (otherOwnerFrag.mTag != null) &&
+                    mTag.equals(otherOwnerFrag.mTag)) {
+                    ret = true;
+                } else if (mId == otherOwnerFrag.mId) {
+                    ret = true;
+                }
+            }
+        } catch (ClassCastException e) {
+            //  Ignore
+        }
+
+        return ret;
+    }
+
+    @Override
+    public boolean isParentActivity(Object obj) {
+        boolean                 ret = false;
+        Activity                otherAct;
+        Fragment                frag = getFragment();
+
+        try {
+            otherAct = (Activity)obj;
+            if (frag != null) {
+                Activity        parentAct = frag.getActivity();
+
+                if ((parentAct != null) && (parentAct == otherAct)) {
+                    ret = true;
+                }
+            }
+        } catch (ClassCastException e) {
+            //  Ignore
+        }
+        return ret;
+    }
+
+    @Override
     PackageManager getPackageManager() {
-        return mFragment.getActivity().getPackageManager();
+        Fragment                frag = getFragment();
+
+        //  Do not check for null, if this fails we have a state problem and
+        //  the NPE we'll get will be helpful to track it down.
+        return frag.getActivity().getPackageManager();
+    }
+
+    @Override
+    Application getApplication() {
+        return getFragment().getActivity().getApplication();
     }
 
     @Override
@@ -76,11 +170,11 @@ class RequestOwnerFragment extends RequestOwner {
 
     @Override
     public Context getUiContext() {
-        return mFragment.getActivity();
+        return getFragment().getActivity();
     }
 
     @Override
     public View getRootView() {
-        return mFragment.getActivity().findViewById(android.R.id.content);
+        return getFragment().getActivity().findViewById(android.R.id.content);
     }
 }

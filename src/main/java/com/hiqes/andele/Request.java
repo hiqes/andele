@@ -58,4 +58,28 @@ class Request {
     public Handler getHandler() {
         return mHandler;
     }
+
+    public boolean isSameRequest(Request otherRequest) {
+        boolean                 ret = false;
+
+        //  See if the protected actions match
+        if (mActions.length == otherRequest.mActions.length) {
+            boolean             actionsMatch = true;
+
+            for (int i = 0; i < mActions.length; i++) {
+                if (!mActions[i].equals(otherRequest.mActions[i])) {
+                    actionsMatch = false;
+                    break;
+                }
+            }
+
+            if (actionsMatch) {
+                if (mOwner.isSameOwner(otherRequest.getOwner())) {
+                    ret = true;
+                }
+            }
+        }
+
+        return ret;
+    }
 }

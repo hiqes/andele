@@ -16,17 +16,30 @@
 package com.hiqes.andele;
 
 import android.annotation.TargetApi;
+import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
+import java.lang.ref.WeakReference;
+
 class RequestOwnerAppCompatActivity extends RequestOwner {
-    private AppCompatActivity   mAppCompatActivity;
+    private static final String                TAG = RequestOwnerAppCompatActivity.class.getSimpleName();
+
+    private WeakReference<AppCompatActivity>   mAppCompatActivityRef;
+    private ComponentName                      mCompName;
 
     public RequestOwnerAppCompatActivity(AppCompatActivity appCompatActivity) {
-        mAppCompatActivity = appCompatActivity;
+        mAppCompatActivityRef = new WeakReference<>(appCompatActivity);
+        mCompName = appCompatActivity.getComponentName();
+    }
+
+    private AppCompatActivity getActivity() {
+        return mAppCompatActivityRef.get();
     }
 
     //@TargetApi(Build.VERSION_CODES.M)
@@ -36,7 +49,16 @@ class RequestOwnerAppCompatActivity extends RequestOwner {
         int                     ret = PackageManager.PERMISSION_GRANTED;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ret = mAppCompatActivity.checkSelfPermission(permission);
+            AppCompatActivity   act = getActivity();
+
+            if (act == null) {
+                //  The Activity has been garbage collected, should NOT
+                //  happen but fail gracefully with a log
+                Log.e(TAG, "checkSelfPermission: Activity no long valid, assume DENIED");
+                ret = PackageManager.PERMISSION_DENIED;
+            } else {
+                ret = act.checkSelfPermission(permission);
+            }
         }
 
         return ret;
@@ -46,7 +68,13 @@ class RequestOwnerAppCompatActivity extends RequestOwner {
     @TargetApi(23)
     @Override
     public void requestPermissions(String[] permissions, int code) {
-        mAppCompatActivity.requestPermissions(permissions, code);
+        AppCompatActivity       act = getActivity();
+
+        if (act == null) {
+            throw new IllegalStateException("Activity no longer valid");
+        }
+
+        act.requestPermissions(permissions, code);
     }
 
     //@TargetApi(Build.VERSION_CODES.M)
@@ -54,9 +82,52 @@ class RequestOwnerAppCompatActivity extends RequestOwner {
     @Override
     public boolean shouldShowRequestPermissionRationale(String permission) {
         boolean                 ret = false;
+        AppCompatActivity       act = getActivity();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ret = mAppCompatActivity.shouldShowRequestPermissionRationale(permission);
+            if (act == null) {
+                Log.e(TAG, "shouldShowRequestPermissionRationale: Activity no longer valid, assume FALSE");
+            } else {
+                ret = act.shouldShowRequestPermissionRationale(permission);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    public boolean isSameOwner(RequestOwner otherOwner) {
+        boolean                         ret = false;
+        RequestOwnerAppCompatActivity   otherOwnerAct = null;
+
+        try {
+            otherOwnerAct = (RequestOwnerAppCompatActivity)otherOwner;
+        } catch (ClassCastException e) {
+            //  just pass through
+        }
+
+        if (otherOwnerAct != null) {
+            if (mCompName.equals(otherOwnerAct.mCompName)) {
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    public boolean isParentActivity(Object obj) {
+        boolean                 ret = false;
+
+        try {
+            AppCompatActivity   otherAct = (AppCompatActivity)obj;
+            AppCompatActivity   act = mAppCompatActivityRef.get();
+
+            if (act == otherAct) {
+                ret = true;
+            }
+        } catch (ClassCastException e) {
+            //  Ignore
         }
 
         return ret;
@@ -64,16 +135,25 @@ class RequestOwnerAppCompatActivity extends RequestOwner {
 
     @Override
     PackageManager getPackageManager() {
-        return mAppCompatActivity.getPackageManager();
+        AppCompatActivity       act = getActivity();
+
+        //  Do not check for null, if this fails we have a state problem and
+        //  the NPE we'll get will be helpful to track it down.
+        return act.getPackageManager();
+    }
+
+    @Override
+    Application getApplication() {
+        return getActivity().getApplication();
     }
 
     @Override
     public Context getUiContext() {
-        return mAppCompatActivity;
+        return getActivity();
     }
 
     @Override
     public View getRootView() {
-        return mAppCompatActivity.findViewById(android.R.id.content);
+        return getActivity().findViewById(android.R.id.content);
     }
 }
