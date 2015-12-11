@@ -59,7 +59,14 @@ install {
 }
 
 Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def BINTRAY_USER = System.getenv('BINTRAY_USER')
+def BINTRAY_APIKEY = System.getenv('BINTRAY_APIKEY')
+if ((BINTRAY_USER == null) || (BINTRAY_APIKEY == null)) {
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+} else {
+    properties.setProperty("bintray.user", BINTRAY_USER)
+    properties.setProperty("bintray.apikey", BINTRAY_APIKEY)
+}
 
 bintray {
     user = properties.getProperty("bintray.user")
