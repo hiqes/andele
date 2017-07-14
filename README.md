@@ -48,6 +48,17 @@ non-obvious  ------------------------------------------ Obvious
                               Secondary
 ```
 
+## Include in the Build
+Andele is available via jcenter.  Be sure jcenter is in your gradle file and add
+the following to your build dependencies:
+
+```
+dependencies {
+    compile 'com.hiqes.andele:andele:0.2.0'
+}
+```
+
+## How to Use
 Andele supports permission requests via Activity, AppCompatActivity (or its
 derivatives), Fragment and support Fragment.  Instead of providing a simple
 wrapper around the new Activity/Fragment APIs, Andele uses the notion of passing
