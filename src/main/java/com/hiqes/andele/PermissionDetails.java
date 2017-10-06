@@ -19,16 +19,18 @@ public class PermissionDetails {
     final String                mPermission;
     final PermissionUse         mUsage;
 
-
+    @SuppressWarnings("WeakerAccess")
     public PermissionDetails(String perm, PermissionUse usage) {
         mPermission = perm;
         mUsage = usage;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getPermission() {
         return mPermission;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public PermissionUse getPermissionUse() {
         return mUsage;
     }

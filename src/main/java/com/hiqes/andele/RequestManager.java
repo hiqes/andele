@@ -1,5 +1,21 @@
+/*
+ * Copyright (C) 2015 HIQES LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hiqes.andele;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
@@ -11,17 +27,20 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public class RequestManager {
-    private static final String         TAG = RequestManager.class.getSimpleName();
 
-    private HashMap<Integer, Request>   mActiveReqs;
-    private HashMap<Integer, Request>   mOrphanReqs;
-    private Random                      mRand;
-    private OrphanTracker               mOrphanTracker;
+class RequestManager {
+    private static final String                 TAG = RequestManager.class.getSimpleName();
 
-    public RequestManager() {
-        mActiveReqs = new HashMap<>();
-        mOrphanReqs = new HashMap<>();
+    @SuppressLint("UseSparseArrays")
+    private final HashMap<Integer, Request>     mActiveReqs = new HashMap<>();
+
+    @SuppressLint("UseSparseArrays")
+    private final HashMap<Integer, Request>     mOrphanReqs = new HashMap<>();
+
+    private final Random                        mRand;
+    private OrphanTracker                       mOrphanTracker;
+
+    RequestManager() {
         mRand = new Random(System.nanoTime());
     }
 
@@ -35,8 +54,9 @@ public class RequestManager {
             //  loop so we don't unnecessarily tax the system.
             ret = mRand.nextInt() & mask;
             while (true) {
-                if (!mActiveReqs.containsKey(ret) &&
-                    !mOrphanReqs.containsKey(ret)) {
+                Request activeReq = mActiveReqs.get(ret);
+                Request orphReq = mActiveReqs.get(ret);
+                if ((activeReq == null) && (orphReq == null)) {
                     break;
                 }
 
@@ -50,7 +70,7 @@ public class RequestManager {
 
     int queueRequest(RequestOwner owner, ProtectedAction[] actions, Handler handler) {
         Request                 req = new Request(owner, actions, handler);
-        int                     reqCode = getNextCode(owner.getReqeuestCodeMask());;
+        int                     reqCode = getNextCode(owner.getReqeuestCodeMask());
 
         //  Make sure we're setup to track orphans by registering as an
         //  Activity lifecycle callback receiver.
@@ -111,12 +131,10 @@ public class RequestManager {
                 if (ret != null) {
                     Log.i(TAG, "getRequest: cleanup orphan req " + code);
                     ret = null;
+                } else {
+                    Log.w(TAG, "getRequest: req " + code + " not found");
                 }
             }
-        }
-
-        if (ret == null) {
-            Log.w(TAG, "getRequest: req " + code + " not found");
         }
 
         return ret;
@@ -136,12 +154,11 @@ public class RequestManager {
                 if (ret != null) {
                     Log.i(TAG, "removeRequest: cleanup orphan req " + code);
                     ret = null;
+                } else {
+                    Log.w(TAG, "removeRequest: req " + code + " not found");
                 }
-            }
-        }
 
-        if (ret == null) {
-            Log.w(TAG, "removeRequest: req " + code + " not found");
+            }
         }
 
         return ret;

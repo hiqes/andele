@@ -22,27 +22,29 @@ class Request {
     private final ProtectedAction[] mActions;
     private final Handler           mHandler;
 
-    public Request(RequestOwner owner, ProtectedAction action, Handler handler) {
+    @SuppressWarnings("unused")
+    Request(RequestOwner owner, ProtectedAction action, Handler handler) {
         mOwner = owner;
         mActions = new ProtectedAction[1];
         mActions[0] = action;
         mHandler = handler;
     }
 
-    public Request(RequestOwner owner, ProtectedAction[] actions, Handler handler) {
+    Request(RequestOwner owner, ProtectedAction[] actions, Handler handler) {
         mOwner = owner;
         mActions = actions;
         mHandler = handler;
     }
 
-    public RequestOwner getOwner() {
+    RequestOwner getOwner() {
         return mOwner;
     }
 
-    public int getActionCount() {
+    int getActionCount() {
         return mActions.length;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProtectedAction getAction() {
         if (mActions.length != 1) {
             throw new IllegalStateException("Request contains more than one action");
@@ -51,15 +53,15 @@ class Request {
         return mActions[0];
     }
 
-    public ProtectedAction[] getActions() {
+    ProtectedAction[] getActions() {
         return mActions;
     }
 
-    public Handler getHandler() {
+    Handler getHandler() {
         return mHandler;
     }
 
-    public boolean isSameRequest(Request otherRequest) {
+    boolean isSameRequest(Request otherRequest) {
         boolean                 ret = false;
 
         //  See if the protected actions match

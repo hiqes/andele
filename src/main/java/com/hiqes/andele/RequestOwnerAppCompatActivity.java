@@ -33,7 +33,7 @@ class RequestOwnerAppCompatActivity extends RequestOwner {
     private WeakReference<AppCompatActivity>   mAppCompatActivityRef;
     private ComponentName                      mCompName;
 
-    public RequestOwnerAppCompatActivity(AppCompatActivity appCompatActivity) {
+    RequestOwnerAppCompatActivity(AppCompatActivity appCompatActivity) {
         mAppCompatActivityRef = new WeakReference<>(appCompatActivity);
         mCompName = appCompatActivity.getComponentName();
     }

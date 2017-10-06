@@ -30,7 +30,7 @@ import java.lang.ref.WeakReference;
 
 class RequestOwnerFragment extends RequestOwner {
     private static final String         TAG = RequestOwnerFragment.class.getSimpleName();
-    static final int                    REQ_CODE_MASK = 0x7F;
+    private static final int            REQ_CODE_MASK = 0x7F;
 
     private WeakReference<Fragment> mFragmentRef;
     private ComponentName           mActivityCompName;
@@ -41,7 +41,7 @@ class RequestOwnerFragment extends RequestOwner {
         return mFragmentRef.get();
     }
 
-    public RequestOwnerFragment(Fragment fragment) {
+    RequestOwnerFragment(Fragment fragment) {
         mFragmentRef = new WeakReference<>(fragment);
         mActivityCompName = fragment.getActivity().getComponentName();
         mId = fragment.getId();
@@ -104,7 +104,7 @@ class RequestOwnerFragment extends RequestOwner {
     @Override
     public boolean isSameOwner(RequestOwner otherOwner) {
         boolean                 ret = false;
-        RequestOwnerFragment    otherOwnerFrag = null;
+        RequestOwnerFragment    otherOwnerFrag;
 
         try {
             otherOwnerFrag = (RequestOwnerFragment)otherOwner;

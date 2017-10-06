@@ -15,6 +15,7 @@
  */
 package com.hiqes.andele;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -31,7 +32,7 @@ class Util {
         return Looper.getMainLooper().getThread() == Thread.currentThread();
     }
 
-    static SharedPreferences getPrefs(Context context) {
+    private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(SHARED_PREFS_NAME,
                                             Context.MODE_PRIVATE);
     }
@@ -44,6 +45,7 @@ class Util {
         return ret;
     }
 
+    @SuppressLint("ApplySharedPref")
     static void setEduDone(Context context, PermissionDetails perm) {
         SharedPreferences.Editor    ed = getPrefs(context).edit();
         String                      key = PREFIX_EDU_DONE + perm.asKey();
@@ -60,6 +62,7 @@ class Util {
         return ret;
     }
 
+    @SuppressLint("ApplySharedPref")
     private static void storeEduDoneReset(Context context, PermissionDetails perm, boolean value) {
         SharedPreferences.Editor    ed = getPrefs(context).edit();
         String                      key = PREFIX_EDU_DONE_RESET + perm.asKey();
