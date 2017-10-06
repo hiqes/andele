@@ -23,7 +23,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.util.Log;
 import android.view.View;
 
 import java.lang.ref.WeakReference;

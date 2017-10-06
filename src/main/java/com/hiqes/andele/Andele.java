@@ -24,7 +24,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -48,7 +47,13 @@ public class Andele {
     static private final int                   MSG_GO_TO_SETTINGS = 50;
 
     private static final RequestManager        sReqMgr = new RequestManager();
-    private static final PermResultHandler     sHandler = new PermResultHandler(Looper.getMainLooper());
+    private static PermResultHandler           sHandler;
+
+    private static void lazyInit(Context context) {
+        if (sHandler == null) {
+             sHandler = new PermResultHandler(context.getMainLooper());
+        }
+    }
 
     @SuppressWarnings("UnnecessaryLocalVariable")
     private static Handler getReqHandler() {
@@ -78,6 +83,9 @@ public class Andele {
         ArrayList<ProtectedAction>  reqActions = null;
         int                         status;
         int                         firstEduIndex = -1;
+
+        //  Do a lazy init to make sure our main thread handler is setup
+        lazyInit(owner.getApplication());
 
         //  Walk through the actions, check the permissions.  If the app
         //  already has them then call back the app.  Otherwise, we'll need
@@ -577,7 +585,38 @@ public class Andele {
         startSettingsApp((Context)fragment.getActivity());
     }
 
+
+    /**
+     * Interface for internal logging calls.  An external logger can be used
+     * by Andele by calling {@link Andele#setLogger(Logger)}.
+     */
+    public interface Logger {
+        /**
+         * Make a log entry with the provided information.
+         *
+         * @param priority  One of the priority values from {@link android.util.Log}.
+         * @param tag       A module specific tag for the log entry
+         * @param msg       The message to be logged
+         */
+        void log(int priority, String tag, String msg);
+    }
+
+
+    /**
+     * Use this to set an internal logger to be used by Andele.  By default
+     * Andele will not have logging enabled until it is built for debug.
+     *
+     * @param newLogger   A class implementing the {@code Logger} interface.
+     */
+    public static void setLogger(Logger newLogger) {
+        Log.setLogger(newLogger);
+    }
+
+
     private static void startSettingsApp(Context uiContext) {
+        //  Do lazyInit to make sure the handler is ready to go
+        lazyInit(uiContext);
+
         Message msg = sHandler.obtainMessage(MSG_GO_TO_SETTINGS);
         msg.obj = uiContext;
         msg.sendToTarget();
