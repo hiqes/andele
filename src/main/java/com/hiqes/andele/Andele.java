@@ -16,7 +16,6 @@
 package com.hiqes.andele;
 
 import android.app.Activity;
-import android.app.Application;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -28,9 +27,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+
 
 /**
  * Andele, the Android Permissions delegate helper API.
@@ -38,20 +35,22 @@ import java.util.Random;
  * Use this to manage {@link com.hiqes.andele.ProtectedAction} instances to
  * assist with requesting permissions and interacting with the user.
  */
+@SuppressWarnings("WeakerAccess")
 public class Andele {
-    static final String                 TAG = Andele.class.getSimpleName();
+    static private final String                TAG = Andele.class.getSimpleName();
 
-    static final int                           MSG_DO_ACTION = 1;
-    static final int                           MSG_SHOW_EDUCATE = 10;
-    static final int                           MSG_SHOW_EDUCATE_REMINDER = 13;
-    static final int                           MSG_SHOW_DENIED_CRITICAL = 14;
-    static final int                           MSG_SHOW_DENIED_FEEDBACK = 15;
-    static final int                           MSG_DENIED = 16;
-    static final int                           MSG_GO_TO_SETTINGS = 50;
+    static private final int                   MSG_DO_ACTION = 1;
+    static private final int                   MSG_SHOW_EDUCATE = 10;
+    static private final int                   MSG_SHOW_EDUCATE_REMINDER = 13;
+    static private final int                   MSG_SHOW_DENIED_CRITICAL = 14;
+    static private final int                   MSG_SHOW_DENIED_FEEDBACK = 15;
+    static private final int                   MSG_DENIED = 16;
+    static private final int                   MSG_GO_TO_SETTINGS = 50;
 
-    private static RequestManager              sReqMgr = new RequestManager();
-    private static PermResultHandler           sHandler = new PermResultHandler(Looper.getMainLooper());
+    private static final RequestManager        sReqMgr = new RequestManager();
+    private static final PermResultHandler     sHandler = new PermResultHandler(Looper.getMainLooper());
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     private static Handler getReqHandler() {
         Handler handler = Util.isMainThread() ? sHandler : new PermResultHandler();
         return handler;
@@ -74,6 +73,7 @@ public class Andele {
         }
     }
 
+    @SuppressWarnings("ForLoopReplaceableByForEach")
     private static void checkAndExecute(RequestOwner owner, ProtectedAction[] actions) {
         ArrayList<ProtectedAction>  reqActions = null;
         int                         status;
@@ -156,19 +156,20 @@ public class Andele {
      * #checkMandatoryPermissions.
      * <p>
      * UX types:
+     * <ul>
      * <li>Educate in context: presented before permission request, if not already granted.
      * This will only be shown the first time the permission is used/requested.</li>
      * <li>Denied critical: presented to inform the user that a CRITICAL permission
      * has been denied and they must go into Settings and adjust permissions in
      * order to use the app.  This is typically shown as a modal and when dismissed
      * the app exits.</li>
-     * <li>Denied remind: presented when permission has been denied but the user
-     * does not want to be bothered again and the ProtectedAction is
-     * ESSENTIAL.  Gives the user the option of going to Settings to adjust.
-     * This is typically presented using a Snackbar.</li>
+     * <li>Denied remind: presented when permission has been denied for a ProtectedAction
+     * which is ESSENTIAL, thus crippling the application's functionality.  Gives the user the
+     * option of going to Settings to adjust.  This is typically presented using a Snackbar.</li>
      * <li>Denial feedback: presented when permission has been denied, optionally
      * give the user another chance to enable it by going to Settings.  This
      * is typically presented as a Snackbar.</li>
+     * </ul>
      *
      * The ProtectedAction.Listener (if present) is called back on grants
      * as soon as possible, in case the UX needs to change before the ProtectedAction.ActionCallback
@@ -179,6 +180,7 @@ public class Andele {
      * @param action     The ProtectedAction describing the permission needed,
      *                   the ActionCallback to execute when granted, etc.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void checkAndExecute(Activity activity, ProtectedAction action) {
         checkAndExecute(new RequestOwnerActivity(activity), action);
     }
@@ -197,6 +199,7 @@ public class Andele {
      * @param action     The ProtectedAction describing the permission needed,
      *                   the ActionCallback to execute when granted, etc.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void checkAndExecute(AppCompatActivity activity, ProtectedAction action) {
         checkAndExecute(new RequestOwnerAppCompatActivity(activity), action);
     }
@@ -215,6 +218,7 @@ public class Andele {
      * @param action           The ProtectedAction describing the permission needed,
      *                         the ActionCallback to execute when granted, etc.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void checkAndExecute(Fragment fragment, ProtectedAction action) {
         checkAndExecute(new RequestOwnerFragment(fragment), action);
     }
@@ -233,11 +237,12 @@ public class Andele {
      * @param action           The ProtectedAction describing the permission needed,
      *                         the ActionCallback to execute when granted, etc.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void checkAndExecute(android.support.v4.app.Fragment fragment, ProtectedAction action) {
         checkAndExecute(new RequestOwnerSupportFragment(fragment), action);
     }
 
-    private static ProtectedAction.ActionCallback mEmptyActionCallback = new ProtectedAction.ActionCallback() {
+    private static final ProtectedAction.ActionCallback mEmptyActionCallback = new ProtectedAction.ActionCallback() {
         @Override
         public void doAction(ProtectedAction action) {
             //  Do nothing.  This is used for check-only tests so the code
@@ -245,6 +250,7 @@ public class Andele {
         }
     };
 
+    @SuppressWarnings("ForLoopReplaceableByForEach")
     private static void checkAndRequestMandatoryPermissions(RequestOwner owner, ProtectedAction[] actions) {
         ArrayList<ProtectedAction>  revisedActions = new ArrayList<>();
 
@@ -289,16 +295,20 @@ public class Andele {
      * permissions.  If the permissions have not been granted to the app, this
      * will request them from the system.  These permissions should only be
      * {@link PermissionUse#CRITICAL CRITICAL} or {@link PermissionUse#ESSENTIAL ESSENTIAL}
-     * permissions.  Others will be
-     * silently ignored and should be used with {@code checkAndExecute}.  The
-     * action callback for the for the provided action will not be executed,
-     * but any attached listener will be called to notify the app that the
-     * permissions are either granted or denied.  The provided ProtectedActions
-     * may have an "educate" layout associated with it to inform the user that
-     * a permission is needed to function.  This only applies for ESSENTIAL
-     * permissions.  Additionally, if a permission is denied, the user will be
-     * presented a full screen dialog explaining the need for the permission
-     * in order for the app to function.  This applies to CRITICAL permissions.
+     * permissions.  Others will be silently ignored and should be used with
+     * {@code checkAndExecute}.  The action callback for the provided
+     * action will not be executed, but any attached listener will be called
+     * to notify the app that the permissions are either granted or denied.
+     *
+     * Both {@code PermissionUse.CRITICAL} and {@code PermissionUse.ESSENTIAL}
+     * may educate the user of their purpose.  This is accomplished via the
+     * {@link ProtectedAction.UserPromptCallback} associated with the
+     * {@code ProtectedAction} for a specific permission.  In both cases,
+     * the specific educate UI callback will be triggered via this call, if needed.
+     * In this case of {@code CRITICAL} permissions, the
+     * {@code UserPromptCallback.showDeniedCritical} callback will be executed
+     * if the permission is denied.  It is up to the app to properly exit if
+     * a {@code CRITICAL} permission is denied.
      * The listener callback for denial will not be triggered until after any
      * UX components are shown.
      * <p>
@@ -310,6 +320,7 @@ public class Andele {
      * @param actions    An array of ProtectedActions describing the permissions
      *                   which are mandatory (i.e. {@code} CRITICAL) for the app.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void checkAndRequestMandatoryPermissions(Activity activity, ProtectedAction[] actions) {
         checkAndRequestMandatoryPermissions(new RequestOwnerActivity(activity), actions);
     }
@@ -319,10 +330,11 @@ public class Andele {
      * permissions.  See {@link #checkAndRequestMandatoryPermissions(Activity, ProtectedAction[])}
      * for details about the behavior.
      * <p>
-     * @param activity   The owning Activity making the request
+     * @param activity   The owning Activity (compatibility library) making the request
      * @param actions    An array of ProtectedActions describing the permissions
      *                   which are mandatory (i.e. {@code} CRITICAL) for the app.
      */
+    @SuppressWarnings("unused")
     public static void checkAndRequestMandatoryPermissions(AppCompatActivity activity, ProtectedAction[] actions) {
         checkAndRequestMandatoryPermissions(new RequestOwnerAppCompatActivity(activity), actions);
     }
@@ -336,6 +348,7 @@ public class Andele {
      * @param actions    An array of ProtectedActions describing the permissions
      *                   which are mandatory (i.e. {@code} CRITICAL) for the app.
      */
+    @SuppressWarnings("unused")
     public static void checkAndRequestMandatoryPermissions(Fragment fragment, ProtectedAction[] actions) {
         checkAndRequestMandatoryPermissions(new RequestOwnerFragment(fragment), actions);
     }
@@ -349,6 +362,7 @@ public class Andele {
      * @param actions    An array of ProtectedActions describing the permissions
      *                   which are mandatory (i.e. {@code} CRITICAL) for the app.
      */
+    @SuppressWarnings("unused")
     public static void checkAndRequestMandatoryPermissions(android.support.v4.app.Fragment fragment, ProtectedAction[] actions) {
         checkAndRequestMandatoryPermissions(new RequestOwnerSupportFragment(fragment), actions);
     }
@@ -365,6 +379,7 @@ public class Andele {
      * @param action    The ProtectedAction previously provided to the app's
      *                  showEducateModal() method
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void markEducateModalDone(int reqCode, ProtectedAction action) {
         Request                 req;
         int                     actionIndex = -1;
@@ -424,7 +439,7 @@ public class Andele {
      * call through to the superclass:
      * <pre>
      * {@code
-     * @Override
+     * {@literal @>}Override
      * public static void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
      *     if (!Andele.onRequestPermissionsResult(reqCode, permissions, grantResults)) {
      *         super.onRequestPermissionsResult(reqCode, permissions, grantResults);
@@ -437,6 +452,7 @@ public class Andele {
      * @param grantResults  The results of the permissions request
      * @return true if this method handled the results, otherwise false
      */
+    @SuppressWarnings("unused")
     public static boolean onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
         boolean handled = false;
         Request req;
@@ -520,6 +536,7 @@ public class Andele {
      * <p>
      * @param activity   The Activity in the running state making the request.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void startSettingsApp(Activity activity) {
         startSettingsApp((Context)activity);
     }
@@ -531,6 +548,7 @@ public class Andele {
      * <p>
      * @param activity   The Activity in the running state making the request.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void startSettingsApp(AppCompatActivity activity) {
         startSettingsApp((Context)activity);
     }
@@ -542,6 +560,7 @@ public class Andele {
      * <p>
      * @param fragment   The Fragment in the running state making the request.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void startSettingsApp(Fragment fragment) {
         startSettingsApp((Context)fragment.getActivity());
     }
@@ -553,6 +572,7 @@ public class Andele {
      * <p>
      * @param fragment   The Fragment in the running state making the request.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void startSettingsApp(android.support.v4.app.Fragment fragment) {
         startSettingsApp((Context)fragment.getActivity());
     }
@@ -603,11 +623,11 @@ public class Andele {
     }
 
     private static class PermResultHandler extends Handler {
-        public PermResultHandler() {
+        PermResultHandler() {
             super();
         }
 
-        public PermResultHandler(Looper looper) {
+        PermResultHandler(Looper looper) {
             super(looper);
         }
 

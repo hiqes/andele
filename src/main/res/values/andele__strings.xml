@@ -5,6 +5,7 @@
     <string name="andele__default_denied_feeback">The app feature requires, \'%s\'. Enable it via Settings.
     </string>
     <string name="andele__settings_label">Settings</string>
-    <string name="andele__default_denied_reminder">The app requires \'%s\' to work. Enable it via the Settings.
+    <string name="andele__default_denied_reminder">The app requires \'%s\' to fully work. Enable it via Settings.
     </string>
+    <string name="andele__default_denied_critical">The permission, \'%s\' is required. Enable it via Settings.</string>
 </resources>

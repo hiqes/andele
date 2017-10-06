@@ -25,3 +25,10 @@ proguard/
 
 # Log Files
 *.log
+
+# Intellij / Android Studio generated files
+.idea/libraries
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+

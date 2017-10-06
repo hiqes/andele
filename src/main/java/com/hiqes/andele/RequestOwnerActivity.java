@@ -33,7 +33,7 @@ class RequestOwnerActivity extends RequestOwner {
     private WeakReference<Activity>     mActivityRef;
     private ComponentName               mCompName;
 
-    public RequestOwnerActivity(Activity activity) {
+    RequestOwnerActivity(Activity activity) {
         mActivityRef = new WeakReference<>(activity);
         mCompName = activity.getComponentName();
     }

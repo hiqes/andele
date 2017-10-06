@@ -54,7 +54,7 @@ the following to your build dependencies:
 
 ```
 dependencies {
-    compile 'com.hiqes.andele:andele:0.2.0'
+    compile 'com.hiqes.andele:andele:0.2.1'
 }
 ```
 

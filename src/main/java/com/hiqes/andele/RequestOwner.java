@@ -19,11 +19,10 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
-import android.os.Handler;
 import android.view.View;
 
 public abstract class RequestOwner {
-    static final int            DEFAULT_MASK = 0x7FFFFFFF;
+    private static final int            DEFAULT_MASK = 0x7FFFFFFF;
 
     public abstract int checkSelfPermission(String permission);
     public abstract void requestPermissions(String[] permissions, int code);
@@ -39,7 +38,7 @@ public abstract class RequestOwner {
     /**
      * Return the mask of possible values which can be used for request
      * codes.  Note that this value must have the most significant bit cleared
-     * as the {@link RequestManager#queueRequest(RequestOwner, ProtectedAction[], Handler)}
+     * as the {@link RequestManager#queueRequest(RequestOwner, ProtectedAction[], android.os.Handler)}
      * method will return a negative value to indicate if the request has
      * already been queued.
      * <p>
@@ -49,6 +48,7 @@ public abstract class RequestOwner {
         return DEFAULT_MASK;
     }
 
+    @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
     public final PermissionInfo getPermissionInfo(String permission) {
         PermissionInfo          info = null;
         PackageManager          pm = getPackageManager();

@@ -16,9 +16,6 @@
 package com.hiqes.andele;
 
 
-import android.app.Activity;
-import android.content.Context;
-
 /**
  * A ProtectedAction object contains the necessary information for Andele
  * to properly handle requesting permissions and displaying UI information
@@ -28,12 +25,10 @@ import android.content.Context;
  * <p>
  * Andele will display UI prompts to the user depending on the permission
  * use specified when the ProtectedAction is built.  See
- * {@link com.hiqes.andele.Andele#checkAndExecute(Activity, ProtectedAction) Andele.checkAndExecute}
+ * {@link com.hiqes.andele.Andele#checkAndExecute(android.app.Activity, ProtectedAction) Andele.checkAndExecute}
  * for more details.
  */
 public class ProtectedAction {
-    static final String                 TAG = ProtectedAction.class.getSimpleName();
-
     final PermissionDetails        mPermDetails;
     final Listener                 mListener;
     final UserPromptCallback       mPromptCb;
@@ -108,14 +103,13 @@ public class ProtectedAction {
          * an ESSENTIAL type, which should show an "Educate Upfront" type
          * modal UI to inform the user of the feature and permission.
          * Andele tracks whether or not the educate modal has been presented
-         * to the user based on the app calling back to Andele once education
-         * modal has been shown, ensuring it will only be shown the first time the
-         * permission is requested.
+         * to the user, ensuring that it will only be presented to the user
+         * the first time the permission is requested.
          * <p>
          * @param action   The action which requires an education UI.
          * @param reqCode  The internal Andele request code corresponding to
          *                 the modal.  This is to be provided back to Andele
-         *                 when calling {@link com.hiqes.andele.Andele#markEducateModalDone(Context,int,ProtectedAction) markEducateModealDone()}
+         *                 when calling {@link com.hiqes.andele.Andele#markEducateModalDone(int,ProtectedAction) markEducateModealDone()}
          */
         void showEducateModal(ProtectedAction action, int reqCode);
 
@@ -150,7 +144,7 @@ public class ProtectedAction {
          * to the Settings app to change permissions.  Because the permission
          * is ESSENTIAL, this UI reminder will be shown every time it is
          * requested and denied.  See
-         * {@link com.hiqes.andele.Andele#startSettingsApp(Activity) startSettinsApp(Activity)}
+         * {@link com.hiqes.andele.Andele#startSettingsApp(android.app.Activity) startSettinsApp(Activity)}
          * for more detailed.
          * <p>
          * @param action   The action which requires a permission which has
@@ -166,7 +160,7 @@ public class ProtectedAction {
          * denied and the user has asked to not be prompted again.  The UI
          * should provide the user the ability to go to the Settings app to
          * change the app's permissions.  See
-         * {@link com.hiqes.andele.Andele#startSettingsApp(Activity) startSettinsApp(Activity)}
+         * {@link com.hiqes.andele.Andele#startSettingsApp(android.app.Activity) startSettinsApp(Activity)}
          * for more detailed.
          * <p>
          * @param action   The action which requires a permission which has
@@ -245,6 +239,7 @@ public class ProtectedAction {
          *               action performed by the ProtectedAction.
          * @return The Builder object.
          */
+        @SuppressWarnings("WeakerAccess")
         public Builder withPermission(String perm) {
             mPerm = perm;
             return this;
@@ -259,6 +254,7 @@ public class ProtectedAction {
          *                ProtectedAction within the app.
          * @return The Builder object.
          */
+        @SuppressWarnings("WeakerAccess")
         public Builder withUsage(PermissionUse usage) {
             mUsage = usage;
             return this;
@@ -271,6 +267,7 @@ public class ProtectedAction {
          * @param listener   The Listener object to be notified of changes.
          * @return The Builder object
          */
+        @SuppressWarnings("WeakerAccess")
         public Builder listener(Listener listener) {
             if (listener == null) {
                 throw new IllegalArgumentException("Listener cannot be null");
@@ -295,6 +292,7 @@ public class ProtectedAction {
          *                   the protected action is to be performed.
          * @return The Builder object
          */
+        @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
         public Builder actionCallback(ActionCallback actionCb) {
             if (actionCb == null) {
                 throw new IllegalArgumentException("Action callback cannot be null");
@@ -308,6 +306,16 @@ public class ProtectedAction {
             return this;
         }
 
+        /**
+         * Set the UserPromptCallback to be executed when the permissions have
+         * been requested but require user interaction (education or permission
+         * denial UI.)
+         * <p>
+         * @param promptCb   The callback object which will be called when user
+         *                   interaction is needed.
+         * @return The Builder object
+         */
+        @SuppressWarnings("WeakerAccess")
         public Builder userPromptCallback(UserPromptCallback promptCb) {
             if (promptCb == null) {
                 throw new IllegalArgumentException("Prompt callback cannot be null");
@@ -335,6 +343,15 @@ public class ProtectedAction {
         }
     }
 
+    /**
+     * Determine if the protected action has user education.  This will return
+     * true if the usage is set to {@link PermissionUse#ESSENTIAL} or
+     * {@link PermissionUse#OPTIONAL}.
+     * <p>
+     * @return Returns true if user education is needed for this protected
+     *         action, otherwise returns false.
+     */
+    @SuppressWarnings("WeakerAccess")
     public boolean hasUserEdu() {
         boolean                 ret = false;
 
@@ -347,6 +364,12 @@ public class ProtectedAction {
         return ret;
     }
 
+    /**
+     * Get the {@link PermissionDetails} associated with this object.
+     * <p>
+     * @return The PermissionDetails associated with this object.
+     */
+    @SuppressWarnings("unused")
     public PermissionDetails getPermissionDetails() {
         return mPermDetails;
     }
