@@ -65,7 +65,8 @@ class Request {
         boolean                 ret = false;
 
         //  See if the protected actions match
-        if (mActions.length == otherRequest.mActions.length) {
+        if ((otherRequest != null) &&
+            (mActions.length == otherRequest.mActions.length)) {
             boolean             actionsMatch = true;
 
             for (int i = 0; i < mActions.length; i++) {
@@ -83,5 +84,27 @@ class Request {
         }
 
         return ret;
+    }
+
+    boolean isSimilarRequest(Request otherRequest) {
+        boolean             hasCommonAction = false;
+
+        //  See if the protected actions overlap at all.
+        if (otherRequest != null) {
+            for (int i = 0; (i < mActions.length) && !hasCommonAction; i++) {
+                ProtectedAction curAction = mActions[i];
+
+                for (int j = 0; j < otherRequest.mActions.length; j++) {
+                    ProtectedAction otherCurAction = otherRequest.mActions[j];
+
+                    if (otherCurAction.equals(curAction)) {
+                        hasCommonAction = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return hasCommonAction;
     }
 }

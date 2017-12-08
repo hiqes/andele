@@ -16,11 +16,14 @@
 package com.hiqes.andele;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
+import android.view.Window;
 
+@SuppressWarnings("unused")
 public class SimpleUserPrompter implements ProtectedAction.UserPromptCallback {
     private static final String TAG = SimpleUserPrompter.class.getSimpleName();
 
@@ -43,14 +46,15 @@ public class SimpleUserPrompter implements ProtectedAction.UserPromptCallback {
         mRoot              = root;
         mEduModalRes       = eduModalRes;
         mEduRes            = eduRes;
-        mDeniedCriticalRes = deniedCriticalRes;
+        mDeniedCriticalRes = (deniedCriticalRes != -1) ?
+            deniedCriticalRes : R.string.andele__default_denied_critical;
         mDeniedRemindRes   = (deniedRemindRes != -1) ?
             deniedRemindRes : R.string.andele__default_denied_reminder;
         mDeniedFeedbackRes = (deniedFeedbackRes != -1) ?
             deniedFeedbackRes : R.string.andele__default_denied_feeback;
     }
 
-    private String getSnackText(int res, String permission) {
+    private String getPermissionText(int res, String permission) {
         String                  ret;
         String                  resString;
         String                  permLabel;
@@ -74,8 +78,8 @@ public class SimpleUserPrompter implements ProtectedAction.UserPromptCallback {
     private void doDeniedSnackbar(ProtectedAction action, int msgRes) {
         String                  feedback;
 
-        feedback = getSnackText(msgRes,
-                                action.mPermDetails.mPermission);
+        feedback = getPermissionText(msgRes,
+                                     action.mPermDetails.mPermission);
 
         Snackbar.make(mRoot,
                       feedback,
@@ -98,13 +102,35 @@ public class SimpleUserPrompter implements ProtectedAction.UserPromptCallback {
     @Override
     public void showEducate(ProtectedAction action) {
         Log.e(TAG, "showEducate: IMPLEMENT ME");
-        //  TODO - SHOW THIS AS A BOTTOM SHEET
+        //  TODO - SHOW THIS AS A BOTTOM SHEET?
     }
 
     @Override
     public void showDeniedCritical(ProtectedAction action) {
-        Log.e(TAG, "showDeniedCritical: IMPLEMENT ME");
-        //  TODO: SHOW THE USER AND FORCE AN EXIT
+        AlertDialog.Builder     bldr = new AlertDialog.Builder(mActivity);
+        String                  message;
+
+        message = getPermissionText(mDeniedCriticalRes,
+                                    action.mPermDetails.mPermission);
+        bldr.setCancelable(false)
+            .setTitle(R.string.andele__critical_title)
+            .setMessage(message)
+            .setNegativeButton(R.string.andele__exit_text,
+                    new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        mActivity.finish();
+                    }
+                })
+            .setPositiveButton(R.string.andele__settings_label,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Andele.startSettingsApp(mActivity);
+                        }
+                    });
+
+        bldr.create().show();
     }
 
     @Override

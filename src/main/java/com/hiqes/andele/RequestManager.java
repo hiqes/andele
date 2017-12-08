@@ -79,29 +79,49 @@ class RequestManager {
         }
 
         //  Before queuing a new request, see if this request is actually
-        //  out there already.  It *should* be in the orphan queue if it is.
+        //  out there already.
         synchronized (this) {
-            Set<Map.Entry<Integer, Request>>    allOrphans;
+            Set<Map.Entry<Integer, Request>>    allReqs;
 
-            allOrphans = mOrphanReqs.entrySet();
-            for (Map.Entry<Integer, Request> curEntry : allOrphans) {
+            //  Check our active requests first.  It is possible for a request
+            //  to still be "active" if it was denied and still being
+            //  handled (UI interaction) but gets requested again in an
+            //  onResume or onStart type callback.
+            allReqs = mActiveReqs.entrySet();
+            for (Map.Entry<Integer, Request> curEntry : allReqs) {
                 Request         curReq = curEntry.getValue();
 
-                if (curReq.isSameRequest(req)) {
-                    int         curKey = curEntry.getKey();
-
-                    //  This orphan is being "restored" via this new
-                    //  request.  This can happen because of config change
-                    //  (e.g. screen rotation) where the Activity owning
-                    //  the request was torn down and re-created while an
-                    //  active request was happening.  So stick this new
-                    //  request on the active map and purge the old one
-                    //  from the orphan map.
-                    Log.d(TAG, "queueRequest: restoring orphan " + curKey);
-                    mOrphanReqs.remove(curKey);
-                    mActiveReqs.put(curKey, req);
+                if (curReq.isSimilarRequest(req)) {
+                    //  This request is already being processed so ignore
+                    //  the new queue request by resetting the request code
+                    //  to -1.
+                    Log.d(TAG, "queueRequest: request already being processed, ignore");
                     reqCode = -1;
                     break;
+                }
+            }
+
+            if (reqCode != -1) {
+                allReqs = mOrphanReqs.entrySet();
+                for (Map.Entry<Integer, Request> curEntry : allReqs) {
+                    Request         curReq = curEntry.getValue();
+
+                    if (curReq.isSimilarRequest(req)) {
+                        int         curKey = curEntry.getKey();
+
+                        //  This orphan is being "restored" via this new
+                        //  request.  This can happen because of config change
+                        //  (e.g. screen rotation) where the Activity owning
+                        //  the request was torn down and re-created while an
+                        //  active request was happening.  So stick this new
+                        //  request on the active map and purge the old one
+                        //  from the orphan map.
+                        Log.d(TAG, "queueRequest: restoring orphan " + curKey);
+                        mOrphanReqs.remove(curKey);
+                        mActiveReqs.put(curKey, req);
+                        reqCode = -1;
+                        break;
+                    }
                 }
             }
         }
@@ -161,6 +181,42 @@ class RequestManager {
         }
 
         return ret;
+    }
+
+
+    Request removeRequest(Request existingReq) {
+        Request                             req = null;
+        Set<Map.Entry<Integer, Request>>    allReq;
+
+        synchronized (this) {
+            allReq = mActiveReqs.entrySet();
+            for(Map.Entry<Integer, Request> curEntry : allReq) {
+                Request         curReq = curEntry.getValue();
+
+                if (curReq.isSameRequest(existingReq)) {
+                    req = curReq;
+                    mActiveReqs.remove(curEntry.getKey());
+                    Log.d(TAG, "removeRequest: (by obj) Found active request, removing it");
+                    break;
+                }
+            }
+
+            if (req != null) {
+                allReq = mOrphanReqs.entrySet();
+                for (Map.Entry<Integer, Request> curEntry : allReq) {
+                    Request     curReq = curEntry.getValue();
+
+                    if (curReq.isSameRequest(existingReq)) {
+                        req = curReq;
+                        mOrphanReqs.remove(curEntry.getKey());
+                        Log.d(TAG, "removeRequest: (by obj) Found orphan request, removing it");
+                        break;
+                    }
+                }
+            }
+        }
+
+        return req;
     }
 
     private class OrphanTracker implements Application.ActivityLifecycleCallbacks {

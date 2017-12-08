@@ -293,7 +293,7 @@ public class Andele {
         actions = revisedActions.toArray(actions);
 
         //  Call through to the "normal" checkAndExecute.  Since we took over
-        //  the callbacks but kept the reset, the ProtectedAction listeners
+        //  the callbacks but kept the rest, the ProtectedAction listeners
         //  will get hit as expected but no action callback.
         checkAndExecute(owner, actions);
     }
@@ -462,12 +462,14 @@ public class Andele {
      */
     @SuppressWarnings("unused")
     public static boolean onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
-        boolean handled = false;
-        Request req;
+        boolean                 handled = false;
+        Request                 req;
+        boolean                 removeReq = true;
 
-        //  Lookup the code, remove the node if there, complain if it doesn't exist
-        req = sReqMgr.removeRequest(reqCode);
-
+        //  Get the request from the manager.  We do not remove it from the
+        //  manager until it is completely processed (success or fail.)
+        //  If we cannot find it, complain about it.
+        req = sReqMgr.getRequest(reqCode);
         if (req == null) {
             Log.w(TAG, "onRequestPermissionsResult: request not found for code " + reqCode);
         } else {
@@ -509,17 +511,20 @@ public class Andele {
                         if (curUsage == PermissionUse.CRITICAL) {
                             //  If the permission is CRITICAL we need to inform
                             //  the user this is a big problem.
+                            removeReq = false;
                             showDeniedCritical(req, j);
                             continue;
                         } else if (curUsage == PermissionUse.ESSENTIAL) {
                             //  If this is an ESSENTIAL permission then remind
                             //  the user of the problems with denial.
+                            removeReq = false;
                             showDeniedReminder(req, j);
                             continue;
                         } else if (req.getOwner().shouldShowRequestPermissionRationale(curPerm)) {
                             //  This permission covers a secondary type of feature
                             //  so as long as the user is open to feedback go
                             //  ahead and provide it.
+                            removeReq = false;
                             showDeniedFeedback(req, j);
                             continue;
                         }
@@ -532,6 +537,10 @@ public class Andele {
             }
 
             handled = true;
+        }
+
+        if (removeReq) {
+            sReqMgr.removeRequest(reqCode);
         }
 
         return handled;
@@ -673,7 +682,8 @@ public class Andele {
         @Override
         public void handleMessage(Message msg) {
             ProtectedAction     action;
-            Request             req;
+            Request             req = null;
+            boolean             removeReq = false;
             boolean             curEduDone;
             Context             context;
 
@@ -719,7 +729,7 @@ public class Andele {
 
                     //  If the education hasn't been done, request it to be
                     //  done now.  If it has been done, try to find the next
-                    //  done to be done.
+                    //  one to be done.
                     if (!curEduDone) {
                         //  The type of education depends on whether the
                         //  permission usage is ESSENTIAL or FEATURE.  When
@@ -763,12 +773,14 @@ public class Andele {
                     req = (Request)msg.obj;
                     action = req.getActions()[msg.arg1];
                     action.mPromptCb.showDeniedCritical(action);
+                    removeReq = true;
                     break;
 
                 case MSG_SHOW_EDUCATE_REMINDER:
                     req = (Request)msg.obj;
                     action = req.getActions()[msg.arg1];
                     action.mPromptCb.showDeniedReminder(action);
+                    removeReq = true;
 
                     //  After the user has been shown UI, notify app
                     notifyDenied(action);
@@ -778,6 +790,7 @@ public class Andele {
                     req = (Request)msg.obj;
                     action = req.getActions()[msg.arg1];
                     action.mPromptCb.showDeniedFeedback(action);
+                    removeReq = true;
 
                     //  After the user has been shown UI, notify app
                     notifyDenied(action);
@@ -801,6 +814,10 @@ public class Andele {
                 default:
                     Log.e(TAG, "Unknown message received: " + msg.what);
                     break;
+            }
+
+            if (removeReq) {
+                sReqMgr.removeRequest(req);
             }
         }
     }
