@@ -5,7 +5,6 @@ import android.app.Application;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
 import org.junit.Before;

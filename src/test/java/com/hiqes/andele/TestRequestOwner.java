@@ -186,7 +186,7 @@ public class TestRequestOwner {
     @Test
     public void testRequestOwnerFragmentOwnerApis() {
 
-/*****@@@@@  LJS: HERE NEED TO RUN TESTS WITH DIFFERENT FRAGMENT TAGS AND IDS  @@@@@*****/
+        //  TODO: HERE NEED TO RUN TESTS WITH DIFFERENT FRAGMENT TAGS AND IDS
         RequestOwnerFragment testClass = new RequestOwnerFragment(mFragment);
         RequestOwnerFragment sameOwner = new RequestOwnerFragment(mFragment);
         assertTrue(testClass.isSameOwner(sameOwner));

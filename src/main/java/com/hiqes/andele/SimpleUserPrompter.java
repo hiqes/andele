@@ -21,7 +21,7 @@ import android.content.res.Resources;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
-import android.view.Window;
+
 
 @SuppressWarnings("unused")
 public class SimpleUserPrompter implements ProtectedAction.UserPromptCallback {
