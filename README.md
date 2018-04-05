@@ -61,11 +61,17 @@ dependencies {
 ## How to Use
 Andele supports permission requests via Activity, AppCompatActivity (or its
 derivatives), Fragment and support Fragment.  Instead of providing a simple
-wrapper around the new Activity/Fragment APIs, Andele uses the notion of passing
-it an action to perform (via callback) which is protected by a permission.  It
-then handles the permission check and if the app has the permission it
-calls the action callback in the same context in which it was requested.
-For example:
+wrapper around the Activity/Fragment permissions APIs, Andele uses the notion of
+passing it an action to perform (via callback) which is protected by a permission.
+It then handles the permission check before executing the provided action.  If the
+app has the permission it calls the action callback in the same context in which
+it was requested.  If the app does not have the permission, then it is requested
+using the Android runtime permission APIs.  When the permission result is 
+processed the callback will be executed or the user notified as appropriate
+for the indicated usage.
+
+For example, to perform an action which requires a permission when a button is
+click:
 
 ```java
 @Override
@@ -73,25 +79,37 @@ public void onClick(View view) {
     ProtectedAction.Builder builder = new ProtectedAction.Builder();
     builder.withPermission(Manifest.permission.READ_CALL_LOG)
            .withUsage(PermissionUse.FEATURE)
-           .listener(this)
            .actionCallback(new ProtectedAction.ActionCallback() {
                @Override
                public void doAction(ProtectedAction action) {
                    Log.d(TAG, "Last call: " + CallLog.Calls.getLastOutgoingCall(this));
                }
            })
-           .userPromptCallback(this);
+           .userPromptCallback(new SimpleUserPrompter(this,
+                                                      mRootView,
+                                                      -1,
+                                                      -1,
+                                                      -1,
+                                                      -1,
+                                                      -1));
     Andele.checkAndExecute(this, builder.build());
 ```
 
 Since Andele does not require the app to subclass a special Activity or
-Fragment, the app must also call through to Andele from its
-`onRequestPermissionsResult()` method.
+Fragment, the **app must also call through to Andele from its
+`onRequestPermissionsResult()` method**.
 
 ```java
 @Override
 public static void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grantResults) {
-    Andele.onRequestPermissionsResult(reqCode, permissions, grantResults));
+    //  Pass the permissions results to Andele.  If it returns false, the result was not
+    //  handled as part of Andele's requests for this context, so pass to superclass.
+    //  This is necessary to do in case there are Fragments managed by this context
+    //  (Activity or other Fragment) so the result gets delivered to the subordinate
+    //  Fragment (which could also be using Andele and use this same code.)
+    if (!Andele.onRequestPermissionsResult(reqCode, permissions, grantResults)) {
+        super.onRequestPermissionsResult(reqCode, permissions, grantResults);
+    }
 }
 ```
 
