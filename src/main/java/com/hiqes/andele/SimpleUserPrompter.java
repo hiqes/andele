@@ -18,8 +18,8 @@ package com.hiqes.andele;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.res.Resources;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AlertDialog;
 import android.view.View;
 
 

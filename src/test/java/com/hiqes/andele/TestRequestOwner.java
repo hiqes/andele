@@ -7,7 +7,7 @@ import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.widget.FrameLayout;
 
 import org.junit.Before;
@@ -17,9 +17,9 @@ import static org.junit.Assert.*;
 
 import static org.mockito.Mockito.*;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class TestRequestOwner {
     private static final String         TEST_PACKAGE = "com.hiqes.andele.test.ui";
     private static final String         DUMMY_PERMISSION = "com.hiqes.andele.test.DUMMY_PERMISSION";
@@ -209,7 +209,7 @@ public class TestRequestOwner {
 
 
     //////////////////////////////////////////////////////////////////////////
-    //  Cannot verify RequestOwnerSupportFragment because the support
+    //  Cannot verify RequestOwnerAndroidXFragment because the support
     //  Fragment's getActivity() method is final!
     //////////////////////////////////////////////////////////////////////////
 }

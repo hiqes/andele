@@ -22,7 +22,7 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
@@ -246,8 +246,8 @@ public class Andele {
      *                         the ActionCallback to execute when granted, etc.
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public static void checkAndExecute(android.support.v4.app.Fragment fragment, ProtectedAction action) {
-        checkAndExecute(new RequestOwnerSupportFragment(fragment), action);
+    public static void checkAndExecute(androidx.fragment.app.Fragment fragment, ProtectedAction action) {
+        checkAndExecute(new RequestOwnerAndroidXFragment(fragment), action);
     }
 
     private static final ProtectedAction.ActionCallback mEmptyActionCallback = new ProtectedAction.ActionCallback() {
@@ -371,8 +371,8 @@ public class Andele {
      *                   which are mandatory (i.e. {@code} CRITICAL) for the app.
      */
     @SuppressWarnings("unused")
-    public static void checkAndRequestMandatoryPermissions(android.support.v4.app.Fragment fragment, ProtectedAction[] actions) {
-        checkAndRequestMandatoryPermissions(new RequestOwnerSupportFragment(fragment), actions);
+    public static void checkAndRequestMandatoryPermissions(androidx.fragment.app.Fragment fragment, ProtectedAction[] actions) {
+        checkAndRequestMandatoryPermissions(new RequestOwnerAndroidXFragment(fragment), actions);
     }
 
     /**
@@ -590,7 +590,7 @@ public class Andele {
      * @param fragment   The Fragment in the running state making the request.
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public static void startSettingsApp(android.support.v4.app.Fragment fragment) {
+    public static void startSettingsApp(androidx.fragment.app.Fragment fragment) {
         startSettingsApp((Context)fragment.getActivity());
     }
 
@@ -761,10 +761,15 @@ public class Andele {
                         }
                     }
 
-                    //  If we get here, there were no more permissions to show
-                    //  education info about, so do the request.
                     if (!skipAsk) {
+                        //  If we get here, there were no more permissions to show
+                        //  education info about, so do the request.
                         doRequest(msg.arg1);
+                    } else {
+                        //  As we are skipping to ask the user for the permission
+                        //  because the user is not interested when educated,
+                        //  we must remove the request from the active requests queue
+                        sReqMgr.removeRequest(msg.arg1);
                     }
 
                     break;
