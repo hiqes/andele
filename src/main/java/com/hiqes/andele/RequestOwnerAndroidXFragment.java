@@ -22,13 +22,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
 
-class RequestOwnerSupportFragment extends RequestOwner {
-    private static final String         TAG = RequestOwnerSupportFragment.class.getSimpleName();
+class RequestOwnerAndroidXFragment extends RequestOwner {
+    private static final String         TAG = RequestOwnerAndroidXFragment.class.getSimpleName();
     private static final int            REQ_CODE_MASK = 0x7F;
 
     private WeakReference<Fragment> mSupportFragRef;
@@ -41,7 +41,7 @@ class RequestOwnerSupportFragment extends RequestOwner {
     }
 
 
-    RequestOwnerSupportFragment(Fragment supportFrag) {
+    RequestOwnerAndroidXFragment(Fragment supportFrag) {
         mSupportFragRef = new WeakReference<>(supportFrag);
         mActivityCompName = supportFrag.getActivity().getComponentName();
         mId = supportFrag.getId();
@@ -103,11 +103,11 @@ class RequestOwnerSupportFragment extends RequestOwner {
 
     @Override
     public boolean isSameOwner(RequestOwner otherOwner) {
-        boolean                         ret = false;
-        RequestOwnerSupportFragment     otherOwnerFrag;
+        boolean                      ret = false;
+        RequestOwnerAndroidXFragment otherOwnerFrag;
 
         try {
-            otherOwnerFrag = (RequestOwnerSupportFragment)otherOwner;
+            otherOwnerFrag = (RequestOwnerAndroidXFragment)otherOwner;
 
             //  Verify the parent activity is the same component
             if (mActivityCompName.equals(otherOwnerFrag.mActivityCompName)) {

@@ -5,7 +5,7 @@ import android.app.Application;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,10 +15,10 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class TestRequest implements ProtectedAction.UserPromptCallback {
     private static final String         TEST_PACKAGE = "com.hiqes.andele.test.ui";
     private static final String         DUMMY_PERMISSION = "com.hiqes.andele.test.DUMMY_PERMISSION";
@@ -51,7 +51,7 @@ public class TestRequest implements ProtectedAction.UserPromptCallback {
     private Fragment            mSameFragment;
 
     //////////////////////////////////////////////////////////////////////////
-    //  Cannot verify RequestOwnerSupportFragment because the support
+    //  Cannot verify RequestOwnerAndroidXFragment because the support
     //  Fragment's getActivity() method is final!
     //////////////////////////////////////////////////////////////////////////
 
