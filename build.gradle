@@ -18,8 +18,8 @@ plugins {
 apply plugin: 'com.android.library'
 
 //  Versions are x.y.z and version code is xxyyzz.  Leading 0s are stripped.
-version = "0.2.1"
-def versionNum = 201
+version = "0.2.2"
+def versionNum = 202
 
 android {
     compileSdkVersion 29
