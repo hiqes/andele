@@ -761,10 +761,15 @@ public class Andele {
                         }
                     }
 
-                    //  If we get here, there were no more permissions to show
-                    //  education info about, so do the request.
                     if (!skipAsk) {
+                        //  If we get here, there were no more permissions to show
+                        //  education info about, so do the request.
                         doRequest(msg.arg1);
+                    } else {
+                        //  As we are skipping to ask the user for the permission
+                        //  because the user is not interested when educated,
+                        //  we must remove the request from the active requests queue
+                        sReqMgr.removeRequest(msg.arg1);
                     }
 
                     break;
